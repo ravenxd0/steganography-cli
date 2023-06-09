@@ -1,4 +1,4 @@
-use image::{ImageBuffer, Rgb, RgbImage};
+use image::{ImageBuffer, Rgb, RgbImage, ImageFormat};
 use std::path::Path;
 
 pub struct LSBstego {
@@ -19,8 +19,10 @@ impl LSBstego {
     pub fn encode_text(
         &self,
         cover_img_path: &Path,
+        stego_img_path: &Path,
         secret_msg: &str,
     ) -> Result<RgbImage, Box<dyn std::error::Error>> {
+        let cover_image_format = ImageFormat::from_path(cover_img_path)?;
         let cover_img = image::open(cover_img_path)?.to_rgb8();
         let (width, height) = cover_img.dimensions();
 
@@ -75,6 +77,8 @@ impl LSBstego {
             // Save the modified pixel in Stego image
             *pixel = image::Rgb([current_pixel[0], current_pixel[1], current_pixel[2]]);
         }
+
+        stego_img.save_with_format(stego_img_path, cover_image_format)?;
 
         Ok(stego_img)
     }
