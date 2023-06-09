@@ -1,9 +1,9 @@
 mod lsbstego;
 
 use image::ImageFormat;
-use std::{env, path::Path, error};
+use std::{env, error, fs::remove_file, path::Path};
 
-fn main() -> Result<(), Box<dyn error::Error>>{
+fn main() -> Result<(), Box<dyn error::Error>> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
@@ -12,24 +12,28 @@ fn main() -> Result<(), Box<dyn error::Error>>{
         return Ok(());
     }
 
-    let lsb_stego = lsbstego::LSBstego;
+    let lsb_stego = lsbstego::LSBstego::new();
 
     if args.len() > 2 {
         let cover_image_path = Path::new(&args[1]);
         let stego_image_path = Path::new(&args[2]);
         let secret_message = &args[3];
 
-        let stego_image = lsb_stego.encode_text(cover_image_path,secret_message)?;
+        let stego_image = lsb_stego.encode_text(cover_image_path, secret_message)?;
 
-        stego_image.save_with_format(stego_image_path,ImageFormat::Png)?;
+        if stego_image_path.exists() {
+            remove_file(stego_image_path)?;
+        }
+
+        stego_image.save_with_format(stego_image_path, ImageFormat::Png)?;
         println!("Message is encoded in the Cover Image Successfully.");
-        println!("Stego Image Path: {}",stego_image_path.display());
+        println!("Stego Image Path: {}", stego_image_path.display());
     } else {
         let stego_image_path = Path::new(&args[1]);
         let secret_message = lsb_stego.decode_text(stego_image_path)?;
 
         println!("Message is decoded from Stego image Successfully");
-        println!("The Secret Message : {}",secret_message);
+        println!("The Secret Message : {}", secret_message);
     }
 
     Ok(())
